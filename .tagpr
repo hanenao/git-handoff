@@ -1,0 +1,8 @@
+# tagpr configuration
+[tagpr]
+	vPrefix = true
+	releaseBranch = main
+	release = draft
+	versionFile = -
+	majorLabels = "tagpr:major"
+	minorLabels = "tagpr:minor"

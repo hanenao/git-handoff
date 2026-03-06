@@ -1,0 +1,57 @@
+version: 2
+
+before:
+  hooks:
+    - go mod download
+
+builds:
+  - id: git-ho
+    binary: git-ho
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X github.com/hanenao/git-handoff/version.Version={{.Version}}
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: darwin
+        formats:
+          - zip
+    files:
+      - README.ja.md
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+brews:
+  - name: git-handoff
+    repository:
+      owner: hanenao
+      name: tap
+      branch: main
+      token: "{{ .Env.GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: https://github.com/hanenao/git-handoff
+    description: Safely hand off branches between local and worktree checkouts
+    install: |
+      bin.install "git-ho"
+
+release:
+  use_existing_draft: true
