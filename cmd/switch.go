@@ -7,9 +7,10 @@ import (
 
 func newSwitchCommand(options *rootOptions) *cobra.Command {
 	return &cobra.Command{
-		Use:   "switch [worktree-id]",
-		Short: "Hand off the current branch between local and worktree",
-		Args:  cobra.MaximumNArgs(1),
+		Use:               "switch [worktree-id]",
+		Short:             "Hand off the current branch between local and worktree",
+		Args:              cobra.MaximumNArgs(1),
+		ValidArgsFunction: completeSwitchWorktrees(options),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			repo, err := options.resolveRepo(ctx)
