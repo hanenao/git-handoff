@@ -17,11 +17,15 @@ func newSwitchCommand(options *rootOptions) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			cfg, err := options.resolveConfig(ctx, cmd, repo)
+			if err != nil {
+				return err
+			}
 			worktreeID := ""
 			if len(args) == 1 {
 				worktreeID = args[0]
 			}
-			targetPath, err := handoff.NewService(options.runner).Switch(ctx, repo, worktreeID)
+			targetPath, err := handoff.NewService(options.runner).Switch(ctx, repo, worktreeID, cfg)
 			if err != nil {
 				return err
 			}

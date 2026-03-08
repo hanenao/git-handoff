@@ -75,6 +75,7 @@ AI 作業用の worktree を新規作成します。
 
 - `local` で実行した場合:
   - 現在の branch を空いている worktree へ handoff する
+  - handoff 後、`local` では `ho.basebranch` の checkout を試み、使えなければ detached のままにする
 - worktree で実行した場合:
   - 現在の branch を `local` へ戻す
 
@@ -156,6 +157,10 @@ AI 作業が終わったら `local` へ handoff back して、人がレビュー
 - `ho.basedir`
   - worktree の作成先ディレクトリ
   - default: `.ho`
+- `ho.basebranch`
+  - `local -> worktree` の handoff 後に `local` で checkout を試みる branch
+  - branch が存在しない、または他の worktree で checkout 済みなら `local` は detached のまま
+  - default: `main`
 - `ho.copyignored`
   - worktree 作成時に `.gitignore` 対象ファイルをコピーするか
   - default: `false`

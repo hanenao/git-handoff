@@ -21,7 +21,7 @@ func NewService(runner ghgit.Runner) *Service {
 	}
 }
 
-func (s *Service) Switch(ctx context.Context, repo *ghgit.RepoContext, worktreeID string) (string, error) {
+func (s *Service) Switch(ctx context.Context, repo *ghgit.RepoContext, worktreeID string, cfg ghgit.Config) (string, error) {
 	currentWorktree, _, err := s.Worktrees.ResolveCurrentBackground(ctx, repo)
 	if err == nil && filepath.Clean(currentWorktree.Path) == filepath.Clean(repo.CurrentWorktreePath) {
 		if worktreeID != "" {
@@ -38,14 +38,14 @@ func (s *Service) Switch(ctx context.Context, repo *ghgit.RepoContext, worktreeI
 		if target.State != ghwt.StateIdle {
 			return "", fmt.Errorf("worktree %s is not idle", worktreeID)
 		}
-		return s.switchToWorktree(ctx, repo, target)
+		return s.switchToWorktree(ctx, repo, target, cfg.BaseBranch)
 	}
 
 	target, _, err := s.Worktrees.SelectIdle(ctx, repo)
 	if err != nil {
 		return "", err
 	}
-	return s.switchToWorktree(ctx, repo, target)
+	return s.switchToWorktree(ctx, repo, target, cfg.BaseBranch)
 }
 
 func (s *Service) Go(ctx context.Context, repo *ghgit.RepoContext, branch string) (string, error) {
@@ -60,7 +60,7 @@ func (s *Service) Go(ctx context.Context, repo *ghgit.RepoContext, branch string
 	return owner.Path, nil
 }
 
-func (s *Service) switchToWorktree(ctx context.Context, repo *ghgit.RepoContext, target ghwt.Environment) (string, error) {
+func (s *Service) switchToWorktree(ctx context.Context, repo *ghgit.RepoContext, target ghwt.Environment, baseBranch string) (string, error) {
 	branch, detached, err := ghgit.CurrentBranch(ctx, s.Runner, repo.CurrentWorktreePath)
 	if err != nil {
 		return "", err
@@ -68,7 +68,7 @@ func (s *Service) switchToWorktree(ctx context.Context, repo *ghgit.RepoContext,
 	if detached {
 		return "", fmt.Errorf("local is detached HEAD; checkout a branch before handoff")
 	}
-	if err := moveBranch(ctx, s.Runner, repo.CommonDir, repo.CurrentWorktreePath, target.Path, branch); err != nil {
+	if err := moveBranch(ctx, s.Runner, repo.CommonDir, repo.CurrentWorktreePath, target.Path, branch, baseBranch); err != nil {
 		return "", err
 	}
 	if err := s.Worktrees.Touch(repo.CommonDir, target.ID); err != nil {
@@ -92,7 +92,7 @@ func (s *Service) switchToLocal(ctx context.Context, repo *ghgit.RepoContext, so
 	if !clean {
 		return "", fmt.Errorf("local has uncommitted changes; commit, stash, or clean it before handoff back")
 	}
-	if err := moveBranch(ctx, s.Runner, repo.CommonDir, source.Path, repo.MainWorktreePath, branch); err != nil {
+	if err := moveBranch(ctx, s.Runner, repo.CommonDir, source.Path, repo.MainWorktreePath, branch, ""); err != nil {
 		return "", err
 	}
 	if err := s.Worktrees.Touch(repo.CommonDir, source.ID); err != nil {
@@ -101,7 +101,7 @@ func (s *Service) switchToLocal(ctx context.Context, repo *ghgit.RepoContext, so
 	return repo.MainWorktreePath, nil
 }
 
-func moveBranch(ctx context.Context, runner ghgit.Runner, commonDir, sourcePath, targetPath, branch string) (err error) {
+func moveBranch(ctx context.Context, runner ghgit.Runner, commonDir, sourcePath, targetPath, branch, sourceFallbackBranch string) (err error) {
 	lock, err := AcquireLock(ctx, commonDir)
 	if err != nil {
 		return err
@@ -160,7 +160,7 @@ func moveBranch(ctx context.Context, runner ghgit.Runner, commonDir, sourcePath,
 	}
 
 	if !hasStash {
-		return nil
+		return restoreSourceAfterMove(ctx, runner, sourcePath, sourceFallbackBranch)
 	}
 
 	if err := ghgit.ApplyStash(ctx, runner, targetPath, stashRef); err != nil {
@@ -175,7 +175,7 @@ func moveBranch(ctx context.Context, runner ghgit.Runner, commonDir, sourcePath,
 	if err := ghgit.DropStash(ctx, runner, targetPath, stashRef); err != nil {
 		return err
 	}
-	return nil
+	return restoreSourceAfterMove(ctx, runner, sourcePath, sourceFallbackBranch)
 }
 
 func restoreTarget(ctx context.Context, runner ghgit.Runner, targetPath, branch string, detached bool) error {
@@ -183,4 +183,14 @@ func restoreTarget(ctx context.Context, runner ghgit.Runner, targetPath, branch 
 		return ghgit.DetachHead(ctx, runner, targetPath)
 	}
 	return ghgit.CheckoutBranch(ctx, runner, targetPath, branch)
+}
+
+func restoreSourceAfterMove(ctx context.Context, runner ghgit.Runner, sourcePath, fallbackBranch string) error {
+	if fallbackBranch == "" {
+		return nil
+	}
+	if err := ghgit.CheckoutBranch(ctx, runner, sourcePath, fallbackBranch); err != nil {
+		return nil
+	}
+	return nil
 }

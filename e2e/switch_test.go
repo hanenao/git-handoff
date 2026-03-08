@@ -26,8 +26,8 @@ func TestSwitchRoundTripPreservesDirtyChanges(t *testing.T) {
 	if trimLine(switchOut.stdout) != worktreePath {
 		t.Fatalf("unexpected switch output: %q", switchOut.stdout)
 	}
-	if branchName(t, repo) != "HEAD" {
-		t.Fatalf("local should be detached after handoff, got %s", branchName(t, repo))
+	if branchName(t, repo) != "main" {
+		t.Fatalf("local should switch back to main after handoff, got %s", branchName(t, repo))
 	}
 	if branchName(t, worktreePath) != "feature/dirty" {
 		t.Fatalf("worktree branch mismatch: %s", branchName(t, worktreePath))
@@ -149,7 +149,47 @@ func TestSwitchRejectsDetachedWorktreeSourceOnReturn(t *testing.T) {
 	if branchName(t, worktreePath) != "HEAD" {
 		t.Fatalf("worktree should stay detached, got %s", branchName(t, worktreePath))
 	}
+	if branchName(t, repo) != "main" {
+		t.Fatalf("local should stay on base branch after failed return, got %s", branchName(t, repo))
+	}
+}
+
+func TestSwitchLeavesLocalDetachedWhenBaseBranchIsBusy(t *testing.T) {
+	binary := buildBinary(t)
+	repo := newTestRepo(t)
+
+	runGit(t, repo, "checkout", "-b", "feature/basebranch-busy")
+	mainOwnerPath := filepath.Join(t.TempDir(), "main-owner")
+	runGit(t, repo, "worktree", "add", mainOwnerPath, "main")
+	create := runBinary(t, binary, repo, "worktree", "create")
+	worktreeID := strings.TrimSpace(strings.TrimPrefix(trimLine(create.stdout), "created worktree: "))
+	worktreePath := resolvedPath(t, filepath.Join(repo, ".ho", worktreeID))
+
+	switchOut := runBinary(t, binary, repo, "switch", worktreeID)
+	if trimLine(switchOut.stdout) != worktreePath {
+		t.Fatalf("unexpected switch output: %q", switchOut.stdout)
+	}
 	if branchName(t, repo) != "HEAD" {
-		t.Fatalf("local should stay in handoff state, got %s", branchName(t, repo))
+		t.Fatalf("local should stay detached when main is busy, got %s", branchName(t, repo))
+	}
+}
+
+func TestSwitchUsesConfiguredBaseBranch(t *testing.T) {
+	binary := buildBinary(t)
+	repo := newTestRepo(t)
+
+	runGit(t, repo, "branch", "master", "main")
+	runGit(t, repo, "config", "--local", "ho.basebranch", "master")
+	runGit(t, repo, "checkout", "-b", "feature/config-base")
+	create := runBinary(t, binary, repo, "worktree", "create")
+	worktreeID := strings.TrimSpace(strings.TrimPrefix(trimLine(create.stdout), "created worktree: "))
+	worktreePath := resolvedPath(t, filepath.Join(repo, ".ho", worktreeID))
+
+	switchOut := runBinary(t, binary, repo, "switch", worktreeID)
+	if trimLine(switchOut.stdout) != worktreePath {
+		t.Fatalf("unexpected switch output: %q", switchOut.stdout)
+	}
+	if branchName(t, repo) != "master" {
+		t.Fatalf("local should switch to configured base branch, got %s", branchName(t, repo))
 	}
 }

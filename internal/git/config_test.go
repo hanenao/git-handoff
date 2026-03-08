@@ -36,9 +36,11 @@ func TestLoadConfigAppliesPrecedenceAndRelativePath(t *testing.T) {
 	runner := fakeRunner{
 		responses: map[string]ghgit.Result{
 			strings.Join([]string{"config", "--global", "--get", "ho.basedir"}, "\x00"):     {Stdout: "~/global-ho"},
+			strings.Join([]string{"config", "--global", "--get", "ho.basebranch"}, "\x00"):  {Stdout: "master"},
 			strings.Join([]string{"config", "--global", "--get", "ho.copyignored"}, "\x00"): {Stdout: "true"},
 			strings.Join([]string{"config", "--global", "--get-all", "ho.hook"}, "\x00"):    {Stdout: "echo global"},
 			strings.Join([]string{"config", "--local", "--get", "ho.basedir"}, "\x00"):      {Stdout: ".local-ho"},
+			strings.Join([]string{"config", "--local", "--get", "ho.basebranch"}, "\x00"):   {Stdout: "develop"},
 			strings.Join([]string{"config", "--local", "--get", "ho.nocd"}, "\x00"):         {Stdout: "true"},
 			strings.Join([]string{"config", "--local", "--get-all", "ho.hook"}, "\x00"):     {Stdout: "echo local 1\necho local 2"},
 		},
@@ -57,6 +59,9 @@ func TestLoadConfigAppliesPrecedenceAndRelativePath(t *testing.T) {
 
 	if cfg.Basedir != filepath.Join(repo.Root, ".local-ho") {
 		t.Fatalf("unexpected basedir: %s", cfg.Basedir)
+	}
+	if cfg.BaseBranch != "develop" {
+		t.Fatalf("unexpected basebranch: %s", cfg.BaseBranch)
 	}
 	if cfg.CopyIgnored {
 		t.Fatalf("expected override to disable copyignored")
@@ -82,6 +87,9 @@ func TestLoadConfigFallsBackToDefaults(t *testing.T) {
 	}
 	if cfg.Basedir != filepath.Join(repo.Root, ".ho") {
 		t.Fatalf("unexpected default basedir: %s", cfg.Basedir)
+	}
+	if cfg.BaseBranch != "main" {
+		t.Fatalf("unexpected default basebranch: %s", cfg.BaseBranch)
 	}
 	if cfg.CopyIgnored || cfg.NoCD || len(cfg.Hooks) != 0 {
 		t.Fatalf("unexpected default config: %+v", cfg)
