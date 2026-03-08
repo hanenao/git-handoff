@@ -1,5 +1,10 @@
 # Changelog
 
+## [v0.0.3](https://github.com/hanenao/git-handoff/compare/v0.0.2...v0.0.3) - 2026-03-08
+### New Features
+- feat: completion by @hanenao in https://github.com/hanenao/git-handoff/pull/8
+- feat: base branch config by @hanenao in https://github.com/hanenao/git-handoff/pull/9
+
 ## [v0.0.2](https://github.com/hanenao/git-handoff/compare/v0.0.1...v0.0.2) - 2026-03-08
 ### Other Changes
 - fix: homebrew tap by @hanenao in https://github.com/hanenao/git-handoff/pull/6
