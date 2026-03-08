@@ -25,7 +25,7 @@ $ go install github.com/hanenao/git-handoff@latest
 ```
 
 ```console
-$ brew install hanenao/tap/git-handoff
+$ brew install hanenao/homebrew-tap/git-handoff
 ```
 
 direnv を使う場合は、この repo で `direnv allow` すると `bin/` が `PATH` に追加され、`GOCACHE` も repo ローカルへ向きます。
