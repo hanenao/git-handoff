@@ -2,6 +2,7 @@ package handoff
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -9,7 +10,7 @@ import (
 	"github.com/hanenao/git-handoff/testutil"
 )
 
-func TestMoveBranchPreservesDirtyState(t *testing.T) {
+func TestMoveBranchPreservesDirtyStateAndRestoresBaseBranch(t *testing.T) {
 	t.Parallel()
 
 	repo := testutil.NewRepo(t)
@@ -22,7 +23,7 @@ func TestMoveBranchPreservesDirtyState(t *testing.T) {
 	targetPath := repo.CreateDetachedWorktree("wt1")
 	ctx := repo.RepoContext(repo.Root)
 
-	if err := moveBranch(context.Background(), ghgit.CLI{}, ctx.CommonDir, repo.Root, targetPath, "feature/dirty-handoff"); err != nil {
+	if err := moveBranch(context.Background(), ghgit.CLI{}, ctx.CommonDir, repo.Root, targetPath, "feature/dirty-handoff", "main"); err != nil {
 		t.Fatalf("moveBranch failed: %v", err)
 	}
 
@@ -38,11 +39,33 @@ func TestMoveBranchPreservesDirtyState(t *testing.T) {
 		}
 	}
 
-	_, sourceDetached := repo.CurrentBranch(repo.Root)
-	if !sourceDetached {
-		t.Fatalf("expected source local checkout to be detached after handoff")
+	sourceBranch, sourceDetached := repo.CurrentBranch(repo.Root)
+	if sourceDetached || sourceBranch != "main" {
+		t.Fatalf("expected source local checkout to move to main, got branch=%q detached=%v", sourceBranch, sourceDetached)
 	}
 	if sourceStatus := repo.GitStatus(repo.Root); sourceStatus != "" {
 		t.Fatalf("expected source local checkout to be clean, got:\n%s", sourceStatus)
+	}
+}
+
+func TestMoveBranchLeavesSourceDetachedWhenBaseBranchCheckoutFails(t *testing.T) {
+	t.Parallel()
+
+	repo := testutil.NewRepo(t)
+	repo.CreateBranch("feature/fallback-detached")
+
+	mainOwnerPath := filepath.Join(t.TempDir(), "main-owner")
+	repo.Git(repo.Root, "worktree", "add", mainOwnerPath, "main")
+
+	targetPath := repo.CreateDetachedWorktree("wt-fallback")
+	ctx := repo.RepoContext(repo.Root)
+
+	if err := moveBranch(context.Background(), ghgit.CLI{}, ctx.CommonDir, repo.Root, targetPath, "feature/fallback-detached", "main"); err != nil {
+		t.Fatalf("moveBranch failed: %v", err)
+	}
+
+	sourceBranch, sourceDetached := repo.CurrentBranch(repo.Root)
+	if !sourceDetached || sourceBranch != "" {
+		t.Fatalf("expected source local checkout to stay detached, got branch=%q detached=%v", sourceBranch, sourceDetached)
 	}
 }

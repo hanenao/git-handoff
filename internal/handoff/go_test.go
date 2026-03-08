@@ -32,7 +32,7 @@ func TestServiceGoFindsLocalAndWorktreeOwners(t *testing.T) {
 
 	repo.CreateBranch("feature/worktree-owner")
 	worktreePath := repo.CreateDetachedWorktree("wt-go")
-	if err := moveBranch(ctx, ghgit.CLI{}, repoCtx.CommonDir, repo.Root, worktreePath, "feature/worktree-owner"); err != nil {
+	if err := moveBranch(ctx, ghgit.CLI{}, repoCtx.CommonDir, repo.Root, worktreePath, "feature/worktree-owner", "main"); err != nil {
 		t.Fatalf("moveBranch failed: %v", err)
 	}
 

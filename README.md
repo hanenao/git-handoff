@@ -75,6 +75,7 @@ Remove a worktree you no longer need.
 
 - When run in `local`:
   - Hand off the current branch to an available worktree
+  - After handoff, try to check out `ho.basebranch` in `local`; if that branch is unavailable, `local` stays detached
 - When run in a worktree:
   - Bring the current branch back to `local`
 
@@ -156,6 +157,10 @@ Main settings:
 - `ho.basedir`
   - Directory where worktrees are created
   - default: `.ho`
+- `ho.basebranch`
+  - Branch to check out in `local` after handing work off to a worktree
+  - If checkout fails because the branch does not exist or is already checked out elsewhere, `local` stays detached
+  - default: `main`
 - `ho.copyignored`
   - Whether ignored files are copied when creating a worktree
   - default: `false`

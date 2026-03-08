@@ -10,6 +10,7 @@ import (
 
 type Config struct {
 	Basedir     string
+	BaseBranch  string
 	CopyIgnored bool
 	Hooks       []string
 	NoCD        bool
@@ -17,6 +18,7 @@ type Config struct {
 
 type ConfigOverrides struct {
 	Basedir     *string
+	BaseBranch  *string
 	CopyIgnored *bool
 	Hooks       *[]string
 	NoCD        *bool
@@ -25,6 +27,7 @@ type ConfigOverrides struct {
 func DefaultConfig() Config {
 	return Config{
 		Basedir:     ".ho",
+		BaseBranch:  "main",
 		CopyIgnored: false,
 		Hooks:       nil,
 		NoCD:        false,
@@ -39,6 +42,11 @@ func LoadConfig(ctx context.Context, runner Runner, repo *RepoContext, overrides
 			return cfg, err
 		} else if ok {
 			cfg.Basedir = value
+		}
+		if value, ok, err := readConfigValue(ctx, runner, repo.CurrentWorktreePath, "--global", "ho.basebranch"); err != nil {
+			return cfg, err
+		} else if ok {
+			cfg.BaseBranch = value
 		}
 		if value, ok, err := readConfigBool(ctx, runner, repo.CurrentWorktreePath, "--global", "ho.copyignored"); err != nil {
 			return cfg, err
@@ -61,6 +69,11 @@ func LoadConfig(ctx context.Context, runner Runner, repo *RepoContext, overrides
 		} else if ok {
 			cfg.Basedir = value
 		}
+		if value, ok, err := readConfigValue(ctx, runner, repo.CurrentWorktreePath, "--local", "ho.basebranch"); err != nil {
+			return cfg, err
+		} else if ok {
+			cfg.BaseBranch = value
+		}
 		if value, ok, err := readConfigBool(ctx, runner, repo.CurrentWorktreePath, "--local", "ho.copyignored"); err != nil {
 			return cfg, err
 		} else if ok {
@@ -80,6 +93,9 @@ func LoadConfig(ctx context.Context, runner Runner, repo *RepoContext, overrides
 
 	if overrides.Basedir != nil {
 		cfg.Basedir = *overrides.Basedir
+	}
+	if overrides.BaseBranch != nil {
+		cfg.BaseBranch = *overrides.BaseBranch
 	}
 	if overrides.CopyIgnored != nil {
 		cfg.CopyIgnored = *overrides.CopyIgnored
