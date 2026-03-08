@@ -7,9 +7,10 @@ import (
 
 func newGoCommand(options *rootOptions) *cobra.Command {
 	return &cobra.Command{
-		Use:   "go <branch>",
-		Short: "Print the path that currently owns the branch",
-		Args:  cobra.ExactArgs(1),
+		Use:               "go <branch>",
+		Short:             "Print the path that currently owns the branch",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: completeBranchOwners(options),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			repo, err := options.resolveRepo(ctx)

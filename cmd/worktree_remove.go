@@ -11,9 +11,10 @@ import (
 
 func newWorktreeRemoveCommand(options *rootOptions) *cobra.Command {
 	return &cobra.Command{
-		Use:   "remove <worktree-id>",
-		Short: "Remove an idle worktree",
-		Args:  cobra.ExactArgs(1),
+		Use:               "remove <worktree-id>",
+		Short:             "Remove an idle worktree",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: completeRemovableWorktrees(options),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			repo, err := options.resolveRepo(ctx)

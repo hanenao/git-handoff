@@ -20,22 +20,22 @@ func TestInitScripts(t *testing.T) {
 		{
 			name:     "bash",
 			args:     []string{"--init", "bash"},
-			contains: []string{"git-ho shell integration for bash", "GIT_HO_SHELL_INTEGRATION=1", `if [ "$1" != "ho" ]; then`},
+			contains: []string{"git-ho shell integration for bash", "GIT_HO_SHELL_INTEGRATION=1", `if [ "$1" != "ho" ]; then`, "_git_ho()", "_git_ho_direct()"},
 		},
 		{
 			name:     "zsh",
 			args:     []string{"--init", "zsh"},
-			contains: []string{"git-ho shell integration for zsh", "GIT_HO_SHELL_INTEGRATION=1", `if [ "$1" != "ho" ]; then`},
+			contains: []string{"git-ho shell integration for zsh", "GIT_HO_SHELL_INTEGRATION=1", `if [ "$1" != "ho" ]; then`, "_git-ho()", "compdef _git-ho git-ho"},
 		},
 		{
 			name:     "fish",
 			args:     []string{"--init", "fish"},
-			contains: []string{"git-ho shell integration for fish", "set -lx GIT_HO_SHELL_INTEGRATION 1", `if test "$argv[1]" != "ho"`},
+			contains: []string{"git-ho shell integration for fish", "set -lx GIT_HO_SHELL_INTEGRATION 1", `if test "$argv[1]" != "ho"`, "__fish_git_ho_completions", "complete -x -c git-ho"},
 		},
 		{
 			name:     "bash_nocd",
 			args:     []string{"--init", "bash", "--nocd"},
-			contains: []string{"Automatic cd is disabled because --nocd was specified."},
+			contains: []string{"Automatic cd is disabled because --nocd was specified.", "_git_ho()", "_git_ho_direct()"},
 		},
 	}
 
@@ -47,7 +47,7 @@ func TestInitScripts(t *testing.T) {
 					t.Fatalf("expected init output to contain %q:\n%s", needle, result.stdout)
 				}
 			}
-			if strings.Contains(tt.name, "nocd") && strings.Contains(result.stdout, "command git-ho") {
+			if strings.Contains(tt.name, "nocd") && strings.Contains(result.stdout, "GIT_HO_SHELL_INTEGRATION=1") {
 				t.Fatalf("wrapper should not be emitted for --init --nocd:\n%s", result.stdout)
 			}
 		})
