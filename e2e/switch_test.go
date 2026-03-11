@@ -20,10 +20,10 @@ func TestSwitchRoundTripPreservesDirtyChanges(t *testing.T) {
 
 	create := runBinary(t, binary, repo, "worktree", "create")
 	worktreeID := strings.TrimSpace(strings.TrimPrefix(trimLine(create.stdout), "created worktree: "))
-	worktreePath := resolvedPath(t, filepath.Join(repo, ".ho", worktreeID))
+	worktreePath := expectedWorktreePath(t, worktreeID)
 
 	switchOut := runBinary(t, binary, repo, "switch")
-	if trimLine(switchOut.stdout) != worktreePath {
+	if resolvedPath(t, trimLine(switchOut.stdout)) != worktreePath {
 		t.Fatalf("unexpected switch output: %q", switchOut.stdout)
 	}
 	if branchName(t, repo) != "main" {
@@ -87,7 +87,7 @@ func TestSwitchRejectsAttachedWorktree(t *testing.T) {
 	runGit(t, repo, "checkout", "-b", "feature/attached")
 	create := runBinary(t, binary, repo, "worktree", "create")
 	worktreeID := strings.TrimSpace(strings.TrimPrefix(trimLine(create.stdout), "created worktree: "))
-	worktreePath := resolvedPath(t, filepath.Join(repo, ".ho", worktreeID))
+	worktreePath := expectedWorktreePath(t, worktreeID)
 	runGit(t, worktreePath, "checkout", "main")
 
 	result := runBinaryExpectError(t, binary, repo, "switch", worktreeID)
@@ -103,11 +103,11 @@ func TestSwitchRejectsDirtyDestinationWorktree(t *testing.T) {
 	runGit(t, repo, "checkout", "-b", "feature/dirty-target")
 	create := runBinary(t, binary, repo, "worktree", "create")
 	worktreeID := strings.TrimSpace(strings.TrimPrefix(trimLine(create.stdout), "created worktree: "))
-	worktreePath := resolvedPath(t, filepath.Join(repo, ".ho", worktreeID))
+	worktreePath := expectedWorktreePath(t, worktreeID)
 	mustWriteFile(t, filepath.Join(worktreePath, "dirty.txt"), "dirty\n")
 
 	result := runBinaryExpectError(t, binary, repo, "switch", worktreeID)
-	if !strings.Contains(result.stderr, "destination worktree at "+worktreePath+" is not clean") {
+	if !strings.Contains(result.stderr, "destination worktree at "+rawExpectedWorktreePath(t, worktreeID)+" is not clean") {
 		t.Fatalf("unexpected error: %q", result.stderr)
 	}
 }
@@ -119,7 +119,7 @@ func TestSwitchRejectsDirtyForegroundOnReturn(t *testing.T) {
 	runGit(t, repo, "checkout", "-b", "feature/return-block")
 	create := runBinary(t, binary, repo, "worktree", "create")
 	worktreeID := strings.TrimSpace(strings.TrimPrefix(trimLine(create.stdout), "created worktree: "))
-	worktreePath := resolvedPath(t, filepath.Join(repo, ".ho", worktreeID))
+	worktreePath := expectedWorktreePath(t, worktreeID)
 
 	runBinary(t, binary, repo, "switch")
 	mustWriteFile(t, filepath.Join(repo, "blocking.txt"), "local\n")
@@ -137,7 +137,7 @@ func TestSwitchRejectsDetachedWorktreeSourceOnReturn(t *testing.T) {
 	runGit(t, repo, "checkout", "-b", "feature/worktree-detached-source")
 	create := runBinary(t, binary, repo, "worktree", "create")
 	worktreeID := strings.TrimSpace(strings.TrimPrefix(trimLine(create.stdout), "created worktree: "))
-	worktreePath := resolvedPath(t, filepath.Join(repo, ".ho", worktreeID))
+	worktreePath := expectedWorktreePath(t, worktreeID)
 
 	runBinary(t, binary, repo, "switch", worktreeID)
 	runGit(t, worktreePath, "checkout", "--detach")
@@ -163,10 +163,10 @@ func TestSwitchLeavesLocalDetachedWhenBaseBranchIsBusy(t *testing.T) {
 	runGit(t, repo, "worktree", "add", mainOwnerPath, "main")
 	create := runBinary(t, binary, repo, "worktree", "create")
 	worktreeID := strings.TrimSpace(strings.TrimPrefix(trimLine(create.stdout), "created worktree: "))
-	worktreePath := resolvedPath(t, filepath.Join(repo, ".ho", worktreeID))
+	worktreePath := expectedWorktreePath(t, worktreeID)
 
 	switchOut := runBinary(t, binary, repo, "switch", worktreeID)
-	if trimLine(switchOut.stdout) != worktreePath {
+	if resolvedPath(t, trimLine(switchOut.stdout)) != worktreePath {
 		t.Fatalf("unexpected switch output: %q", switchOut.stdout)
 	}
 	if branchName(t, repo) != "HEAD" {
@@ -183,10 +183,10 @@ func TestSwitchUsesConfiguredBaseBranch(t *testing.T) {
 	runGit(t, repo, "checkout", "-b", "feature/config-base")
 	create := runBinary(t, binary, repo, "worktree", "create")
 	worktreeID := strings.TrimSpace(strings.TrimPrefix(trimLine(create.stdout), "created worktree: "))
-	worktreePath := resolvedPath(t, filepath.Join(repo, ".ho", worktreeID))
+	worktreePath := expectedWorktreePath(t, worktreeID)
 
 	switchOut := runBinary(t, binary, repo, "switch", worktreeID)
-	if trimLine(switchOut.stdout) != worktreePath {
+	if resolvedPath(t, trimLine(switchOut.stdout)) != worktreePath {
 		t.Fatalf("unexpected switch output: %q", switchOut.stdout)
 	}
 	if branchName(t, repo) != "master" {

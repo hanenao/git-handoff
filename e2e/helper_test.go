@@ -7,8 +7,11 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 )
+
+var testHomes sync.Map
 
 type commandResult struct {
 	stdout string
@@ -106,7 +109,7 @@ func runGit(t *testing.T, dir string, args ...string) commandResult {
 func isolatedEnv(t *testing.T) []string {
 	t.Helper()
 
-	home := filepath.Join(t.TempDir(), "home")
+	home := testHome(t)
 	mustMkdirAll(t, home)
 	return append(
 		os.Environ(),
@@ -115,6 +118,28 @@ func isolatedEnv(t *testing.T) []string {
 		"GIT_CONFIG_SYSTEM=/dev/null",
 		"XDG_CONFIG_HOME="+home,
 	)
+}
+
+func testHome(t *testing.T) string {
+	t.Helper()
+
+	if home, ok := testHomes.Load(t.Name()); ok {
+		return home.(string)
+	}
+
+	home := filepath.Join(t.TempDir(), "home")
+	actual, _ := testHomes.LoadOrStore(t.Name(), home)
+	return actual.(string)
+}
+
+func expectedWorktreePath(t *testing.T, worktreeID string) string {
+	t.Helper()
+	return resolvedPath(t, rawExpectedWorktreePath(t, worktreeID))
+}
+
+func rawExpectedWorktreePath(t *testing.T, worktreeID string) string {
+	t.Helper()
+	return filepath.Join(testHome(t), ".ho", "worktree", worktreeID)
 }
 
 func mustWriteFile(t *testing.T, path, contents string) {

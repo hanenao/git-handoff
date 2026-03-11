@@ -46,7 +46,7 @@ func TestEnvCreateListAndRemove(t *testing.T) {
 		t.Fatalf("unexpected create output: %q", create.stdout)
 	}
 	worktreeID := strings.TrimSpace(strings.TrimPrefix(trimLine(create.stdout), "created worktree: "))
-	worktreePath := resolvedPath(t, filepath.Join(repo, ".ho", worktreeID))
+	worktreePath := expectedWorktreePath(t, worktreeID)
 
 	if _, err := os.Stat(filepath.Join(worktreePath, ".hooked")); err != nil {
 		t.Fatalf("hook output missing: %v", err)
@@ -78,7 +78,7 @@ func TestEnvRemoveRejectsWorktreeWithUncommittedChanges(t *testing.T) {
 
 	create := runBinary(t, binary, repo, "worktree", "create")
 	worktreeID := strings.TrimSpace(strings.TrimPrefix(trimLine(create.stdout), "created worktree: "))
-	worktreePath := resolvedPath(t, filepath.Join(repo, ".ho", worktreeID))
+	worktreePath := expectedWorktreePath(t, worktreeID)
 
 	mustWriteFile(t, filepath.Join(worktreePath, "dirty.txt"), "dirty\n")
 

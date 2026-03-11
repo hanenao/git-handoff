@@ -122,7 +122,7 @@ Create or check out the target branch in `local`.
 
 ```console
 $ git ho switch
-/path/to/.ho/a8k2m9
+/home/alice/.ho/worktree/a8k2m9
 ```
 
 At this point, the branch and the handoff-eligible changes move to an available worktree.
@@ -156,7 +156,7 @@ Main settings:
 
 - `ho.basedir`
   - Directory where worktrees are created
-  - default: `.ho`
+  - default: `$HOME/.ho/worktree`
 - `ho.basebranch`
   - Branch to check out in `local` after handing work off to a worktree
   - If checkout fails because the branch does not exist or is already checked out elsewhere, `local` stays detached

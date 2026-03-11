@@ -1,7 +1,6 @@
 package e2e
 
 import (
-	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -40,7 +39,7 @@ func TestCommandCompletion(t *testing.T) {
 		}
 	})
 
-	worktreePath := resolvedPath(t, filepath.Join(repo, ".ho", worktreeID))
+	worktreePath := expectedWorktreePath(t, worktreeID)
 	runBinary(t, binary, repo, "switch")
 
 	t.Run("switch command omits worktree ids inside managed worktree", func(t *testing.T) {
