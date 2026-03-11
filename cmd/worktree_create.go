@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -59,7 +61,7 @@ func newWorktreeCreateCommand(options *rootOptions) *cobra.Command {
 					return err
 				}
 			}
-			if err := runHooks(ctx, path, cfg.Hooks); err != nil {
+			if err := runHooks(ctx, path, cfg.Hooks, options.stdout, options.stderr); err != nil {
 				return err
 			}
 			if err := ghwt.WriteMetadata(repo.CommonDir, metadata); err != nil {
@@ -134,13 +136,26 @@ func copyFile(source, target string, mode fs.FileMode) error {
 	return os.WriteFile(target, data, mode.Perm())
 }
 
-func runHooks(ctx context.Context, dir string, hooks []string) error {
+func runHooks(ctx context.Context, dir string, hooks []string, stdout, stderr io.Writer) error {
 	for _, hook := range hooks {
 		command := exec.CommandContext(ctx, "sh", "-c", hook)
 		command.Dir = dir
-		output, err := command.CombinedOutput()
+
+		var stdoutBuffer bytes.Buffer
+		var stderrBuffer bytes.Buffer
+		command.Stdout = io.MultiWriter(stdout, &stdoutBuffer)
+		command.Stderr = io.MultiWriter(stderr, &stderrBuffer)
+
+		err := command.Run()
 		if err != nil {
-			return fmt.Errorf("hook failed: %s: %w", strings.TrimSpace(string(output)), err)
+			output := strings.TrimSpace(strings.Join([]string{
+				strings.TrimSpace(stdoutBuffer.String()),
+				strings.TrimSpace(stderrBuffer.String()),
+			}, "\n"))
+			if output == "" {
+				output = hook
+			}
+			return fmt.Errorf("hook failed: %s: %w", output, err)
 		}
 	}
 	return nil

@@ -174,3 +174,17 @@ func resolvedPath(t *testing.T, path string) string {
 func trimLine(value string) string {
 	return strings.TrimSpace(value)
 }
+
+func createdWorktreeID(t *testing.T, output string) string {
+	t.Helper()
+
+	for line := range strings.SplitSeq(output, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if after, ok := strings.CutPrefix(trimmed, "created worktree: "); ok {
+			return strings.TrimSpace(after)
+		}
+	}
+
+	t.Fatalf("created worktree line not found in output:\n%s", output)
+	return ""
+}

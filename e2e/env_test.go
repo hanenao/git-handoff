@@ -45,7 +45,7 @@ func TestEnvCreateListAndRemove(t *testing.T) {
 	if !strings.Contains(create.stdout, "created worktree: ") {
 		t.Fatalf("unexpected create output: %q", create.stdout)
 	}
-	worktreeID := strings.TrimSpace(strings.TrimPrefix(trimLine(create.stdout), "created worktree: "))
+	worktreeID := createdWorktreeID(t, create.stdout)
 	worktreePath := expectedWorktreePath(t, worktreeID)
 
 	if _, err := os.Stat(filepath.Join(worktreePath, ".hooked")); err != nil {
@@ -69,6 +69,22 @@ func TestEnvCreateListAndRemove(t *testing.T) {
 	listAfter := runBinary(t, binary, repo, "worktree", "list")
 	if strings.Contains(listAfter.stdout, worktreeID) {
 		t.Fatalf("worktree still listed after remove:\n%s", listAfter.stdout)
+	}
+}
+
+func TestEnvCreateDisplaysHookOutput(t *testing.T) {
+	binary := buildBinary(t)
+	repo := newTestRepo(t)
+
+	create := runBinary(t, binary, repo, "worktree", "create", "--hook", "printf 'hook says hi\\n'; touch .hooked")
+	if !strings.Contains(create.stdout, "hook says hi\n") {
+		t.Fatalf("hook stdout missing from create output: %q", create.stdout)
+	}
+
+	worktreeID := createdWorktreeID(t, create.stdout)
+	worktreePath := expectedWorktreePath(t, worktreeID)
+	if _, err := os.Stat(filepath.Join(worktreePath, ".hooked")); err != nil {
+		t.Fatalf("hook side effect missing: %v", err)
 	}
 }
 
