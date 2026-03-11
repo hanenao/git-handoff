@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.0.4](https://github.com/hanenao/git-handoff/compare/v0.0.3...v0.0.4) - 2026-03-11
+### Breaking Changes
+- feat: change ho.basedir defalut by @hanenao in https://github.com/hanenao/git-handoff/pull/11
+### New Features
+- feat: display hooks stdout by @hanenao in https://github.com/hanenao/git-handoff/pull/13
+
 ## [v0.0.3](https://github.com/hanenao/git-handoff/compare/v0.0.2...v0.0.3) - 2026-03-08
 ### New Features
 - feat: completion by @hanenao in https://github.com/hanenao/git-handoff/pull/8
