@@ -3,6 +3,7 @@ package git_test
 import (
 	"context"
 	"errors"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -85,7 +86,11 @@ func TestLoadConfigFallsBackToDefaults(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadConfig failed: %v", err)
 	}
-	if cfg.Basedir != filepath.Join(repo.Root, ".ho") {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		t.Fatalf("UserHomeDir failed: %v", err)
+	}
+	if cfg.Basedir != filepath.Join(home, ".ho", "worktree") {
 		t.Fatalf("unexpected default basedir: %s", cfg.Basedir)
 	}
 	if cfg.BaseBranch != "main" {

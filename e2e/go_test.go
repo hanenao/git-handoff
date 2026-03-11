@@ -1,7 +1,6 @@
 package e2e
 
 import (
-	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -19,7 +18,7 @@ func TestGoCommandFindsBranchOwner(t *testing.T) {
 	runGit(t, repo, "checkout", "-b", "feature/path")
 	create := runBinary(t, binary, repo, "worktree", "create")
 	worktreeID := strings.TrimSpace(strings.TrimPrefix(trimLine(create.stdout), "created worktree: "))
-	worktreePath := resolvedPath(t, filepath.Join(repo, ".ho", worktreeID))
+	worktreePath := expectedWorktreePath(t, worktreeID)
 
 	runBinary(t, binary, repo, "switch")
 	owner := runBinary(t, binary, repo, "go", "feature/path")

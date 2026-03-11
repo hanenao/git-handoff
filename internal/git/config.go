@@ -26,7 +26,7 @@ type ConfigOverrides struct {
 
 func DefaultConfig() Config {
 	return Config{
-		Basedir:     ".ho",
+		Basedir:     "$HOME/.ho/worktree",
 		BaseBranch:  "main",
 		CopyIgnored: false,
 		Hooks:       nil,

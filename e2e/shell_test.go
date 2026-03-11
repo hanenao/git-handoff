@@ -79,7 +79,7 @@ func TestShellIntegrationSwitchChangesDirectory(t *testing.T) {
 			runGit(t, repo, "checkout", "-b", "feature/shell-"+tt.shell)
 			create := runBinary(t, binary, repo, "worktree", "create")
 			worktreeID := strings.TrimSpace(strings.TrimPrefix(trimLine(create.stdout), "created worktree: "))
-			worktreePath := resolvedPath(t, filepath.Join(repo, ".ho", worktreeID))
+			worktreePath := expectedWorktreePath(t, worktreeID)
 
 			stdout, stderr, err := runShellScript(t, tt.shell, binary, repo, shellInitScript(tt.shell)+`
 git ho switch
@@ -124,7 +124,7 @@ func TestShellIntegrationSwitchRespectsNoCDConfig(t *testing.T) {
 			runGit(t, repo, "checkout", "-b", "feature/config-"+tt.shell)
 			create := runBinary(t, binary, repo, "worktree", "create")
 			worktreeID := strings.TrimSpace(strings.TrimPrefix(trimLine(create.stdout), "created worktree: "))
-			worktreePath := resolvedPath(t, filepath.Join(repo, ".ho", worktreeID))
+			worktreePath := expectedWorktreePath(t, worktreeID)
 			resolvedRepo := resolvedPath(t, repo)
 
 			stdout, stderr, err := runShellScript(t, tt.shell, binary, repo, shellInitScript(tt.shell)+`
@@ -169,7 +169,7 @@ func TestShellIntegrationSwitchRespectsNoCDFlag(t *testing.T) {
 			runGit(t, repo, "checkout", "-b", "feature/flag-"+tt.shell)
 			create := runBinary(t, binary, repo, "worktree", "create")
 			worktreeID := strings.TrimSpace(strings.TrimPrefix(trimLine(create.stdout), "created worktree: "))
-			worktreePath := resolvedPath(t, filepath.Join(repo, ".ho", worktreeID))
+			worktreePath := expectedWorktreePath(t, worktreeID)
 			resolvedRepo := resolvedPath(t, repo)
 
 			stdout, stderr, err := runShellScript(t, tt.shell, binary, repo, shellInitScript(tt.shell)+`
@@ -214,7 +214,7 @@ func TestShellIntegrationGoChangesDirectory(t *testing.T) {
 			runGit(t, repo, "checkout", "-b", "feature/go-"+tt.shell)
 			create := runBinary(t, binary, repo, "worktree", "create")
 			worktreeID := strings.TrimSpace(strings.TrimPrefix(trimLine(create.stdout), "created worktree: "))
-			worktreePath := resolvedPath(t, filepath.Join(repo, ".ho", worktreeID))
+			worktreePath := expectedWorktreePath(t, worktreeID)
 			runBinary(t, binary, repo, "switch")
 
 			stdout, stderr, err := runShellScript(t, tt.shell, binary, repo, shellInitScript(tt.shell)+`

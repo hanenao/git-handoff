@@ -102,24 +102,38 @@ func EvalPath(path string) (string, error) {
 }
 
 func ExpandHome(path string) (string, error) {
-	if path == "" || path == "~" {
+	if path == "" {
+		return "", nil
+	}
+	if path == "~" || path == "$HOME" || path == "${HOME}" {
 		home, err := os.UserHomeDir()
 		if err != nil {
 			return "", err
 		}
-		if path == "" {
-			return "", nil
-		}
 		return home, nil
 	}
-	if !strings.HasPrefix(path, "~/") {
+	switch {
+	case strings.HasPrefix(path, "~/"):
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		return filepath.Join(home, strings.TrimPrefix(path, "~/")), nil
+	case strings.HasPrefix(path, "$HOME/"):
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		return filepath.Join(home, strings.TrimPrefix(path, "$HOME/")), nil
+	case strings.HasPrefix(path, "${HOME}/"):
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		return filepath.Join(home, strings.TrimPrefix(path, "${HOME}/")), nil
+	default:
 		return path, nil
 	}
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(home, strings.TrimPrefix(path, "~/")), nil
 }
 
 func samePath(a, b string) bool {
