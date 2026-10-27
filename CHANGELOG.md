@@ -1,5 +1,10 @@
 # Changelog
 
+## [v0.0.5](https://github.com/hanenao/git-handoff/compare/v0.0.4...v0.0.5) - 2026-10-27
+
+### Other Changes
+- chore(deps): bump the dependencies group across 1 directory with 5 updates by @dependabot[bot] in https://github.com/hanenao/git-handoff/pull/17
+
 ## [v0.0.4](https://github.com/hanenao/git-handoff/compare/v0.0.3...v0.0.4) - 2026-03-11
 ### Breaking Changes
 - feat: change ho.basedir defalut by @hanenao in https://github.com/hanenao/git-handoff/pull/11
